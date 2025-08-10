@@ -1,0 +1,17 @@
+body {
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    background-color: #3d342a; /* Sepia-toned background */
+}
+
+canvas {
+    display: block;
+    background-color: #000;
+    filter: sepia(1); /* Applies a sepia tone to the entire canvas */
+}
+
+/* For the hunting scene crosshair */
+.crosshair {
+    cursor: crosshair;
+}

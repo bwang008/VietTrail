@@ -1,0 +1,183 @@
+Building Gem:
+
+You are a professional, expert level game and software developer who understands best practices for coding and structuring video games, programs, and code based on the vast number of successful programs and games you have created and written. 
+
+You are tasked with hearing someone's idea for a web-based software application and asked to work with that person to formulate an excellent prompt to provide to the AI in order to provide the AI with guidance on:
+
+-The app's overall design and structure to make sure the code is well-written in a professional and easy to manage way suited to your high standards
+-A breakdown of the different pages and scenes of the game i.e.:
+The application/game should open to a start menu page with the following options: New Game, Options, Exit.
+
+The goal is to provide enough information and guidance like a spec sheet such that the AI can successfully generate the code for an application based on the detailed description.
+
+
+Starting at 2:30PM Sunday:
+
+Can you write me a prompt to create a web-browser based version of the Oregon Trail video game with the UI (https://en.wikipedia.org/wiki/The_Oregon_Trail_(1985_video_game) ? I want it to have a start menu, start a new game, and make a few modifications:
+
+
+-Make it based in Vietnam and the Ho Chi Minh trail
+-Starting screen should be an overview map of Vietnam and some surrounding SEA countries with the title as 'The Viet Trail'
+Options should be 'Start Game' 
+
+And the expectation is the game should load and continue like it would in the Oregon trail but with a theme of being in Vietnam with corresponding Viet names of characters, and the goal is to get from Hanoi down to Saigon to provide supplies.
+
+The main game cycle should be you watching your caravan seen making moving animations while the background jungle scrolls by with the artwork being similar to 8 bit pixel games.
+
+There is a progress bar denoting the total time until arrival at the destination, when this bar reaches the end, the game is over and you win.
+
+Incorporate other functions of Oregon Trail to try to create a simple prototype and demo, so we want to be able to stop and hunt for animals like Water buffalo or monkeys in order to gather food.
+
+The final screen will show the map of Vietnam and say 'Victory!' if the user makes it, otherwise it will show a dark screen and say 'Defeat!' if you ever let the hunger bar reach to 0 level meaning you have starved to death. 
+
+The expected time for the game to complete should be about 5 minutes, and each hunger cycle should take about 1 minute to run from full. 
+
+
+
+
+Gemini Response:
+
+Prompt for AI Game Generation
+
+Project Title: The Viet Trail
+
+Core Concept: Create a web-based, 8-bit pixel art style survival/resource management game inspired by "The Oregon Trail," set on the Ho Chi Minh Trail during the Vietnam War. The player's goal is to manage resources and travel from Hanoi to Saigon. This is a prototype focused on the core travel and hunger mechanics.
+
+Technology Stack:
+
+    Language: JavaScript (ES6+)
+
+    Rendering: HTML5 Canvas
+
+    Structure: The code should be modular. Use JavaScript classes or modules for different components of the game (e.g., GameManager, Player, UI, SceneManager). Avoid a single-file script. All game code should be self-contained within HTML, CSS, and JS files without requiring external server-side logic.
+
+I. Overall Game Structure & Design
+
+    Game Manager (GameManager.js):
+
+        This will be the central controller of the game.
+
+        It initializes the game, manages the main game loop (requestAnimationFrame), and handles transitions between different game scenes.
+
+        It holds the primary game state object.
+
+    Scene Manager:
+
+        The GameManager will use a scene management system to switch between different parts of the game. Define the following scenes:
+
+            MainMenuScene
+
+            TravelScene
+
+            HuntingScene
+
+            EndScene (for both victory and defeat)
+
+    Game State Object:
+
+        Create a single JavaScript object to hold all mutable game data. This makes saving/loading (in a future version) and debugging easier.
+
+        Initial state should include:
+
+            progress: 0 (0 to 100 scale)
+
+            hunger: 100 (0 to 100 scale)
+
+            partyMembers: ['An', 'Binh', 'Chi', 'Dung'] (Example Vietnamese names)
+
+            supplies: 100 (Represents food units)
+
+II. Scene Breakdown & Specifications
+
+Scene 1: Main Menu (MainMenuScene)
+
+    Visuals:
+
+        Display a static, 8-bit style background image of a map of Vietnam and surrounding countries, similar to the provided reference image. The map should clearly show the path of the Ho Chi Minh trail originating near Hanoi and terminating near Saigon.
+
+        Overlay the title "The Viet Trail" in a large, pixelated font at the top of the screen.
+
+        Display a single button in the center of the screen with the text "Start Game".
+
+    Functionality:
+
+        Clicking the "Start Game" button will trigger the GameManager to transition to the TravelScene.
+
+Scene 2: Main Travel Scene (TravelScene)
+
+    Visuals & Layout: The screen is divided into two main sections.
+
+        Top Section (60% of height): The Viewport
+
+            Render a side-scrolling background of a dense jungle environment. The background should scroll from right to left to give the illusion of movement.
+
+            In the center-left of this viewport, draw an 8-bit animated sprite of the player's caravan (e.g., a group of people carrying supplies on foot or with bicycles). The sprite should have a simple walk/move animation cycle.
+
+        Bottom Section (40% of height): The UI Panel
+
+            This area has a solid dark background, reminiscent of the UI in the 1985 "Oregon Trail."
+
+            UI Elements (use a clear, 8-bit font):
+
+                Progress Bar: A horizontal bar labeled "Journey to Saigon". It fills from left to right as the progress state variable increases.
+
+                Hunger Bar: A horizontal bar labeled "Stamina/Food". It starts full and depletes. Its color should change from green to yellow to red as it gets lower.
+
+                Status Text: Display the names of the party members.
+
+                Action Button: A button labeled "Stop to Hunt".
+
+    Functionality & Game Loop:
+
+        Progression: The progress state variable should increase from 0 to 100 over the course of approximately 5 minutes (300 seconds). This means progress increases by 100 / 300 every second.
+
+        Hunger: The hunger state variable should decrease from 100 to 0 over the course of approximately 1 minute (60 seconds). This means hunger decreases by 100 / 60 every second.
+
+        Win Condition: If progress reaches 100, transition to the EndScene with a "victory" flag.
+
+        Loss Condition: If hunger reaches 0, transition to the EndScene with a "defeat" flag.
+
+        "Stop to Hunt" Button: Clicking this button pauses the main travel loop (progress and hunger depletion stop) and transitions the game to the HuntingScene.
+
+Scene 3: Hunting Mini-Game (HuntingScene)
+
+    Visuals:
+
+        Display a static, non-scrolling image of a jungle clearing.
+
+        For a 15-second duration, have 8-bit sprites of animals (e.g., Water Buffalo, Monkeys) appear at random locations and move across the screen.
+
+    Functionality:
+
+        The player's mouse cursor changes to a crosshair.
+
+        The player can click on the moving animal sprites.
+
+        Each successful click on an animal adds a fixed amount to the supplies state variable (e.g., +20 supplies per animal).
+
+        After 15 seconds, the mini-game ends automatically.
+
+        Upon ending, the game should display a message like "You gathered X supplies." The hunger state variable is then refilled by the amount of supplies gathered, capped at 100. The supplies variable is then consumed (reset to 0 or reduced).
+
+        After a brief pause (2-3 seconds) on the results message, transition back to the TravelScene. The main travel loop resumes.
+
+Scene 4: End Scene (EndScene)
+
+    This scene has two variants based on the flag passed by the GameManager.
+
+    Victory Condition (progress >= 100):
+
+        Visuals: Display the same map from the MainMenuScene.
+
+        Text: Overlay the word "VICTORY!" in large, prominent letters. Below it, add the text: "Your supplies have reached Saigon."
+
+    Defeat Condition (hunger <= 0):
+
+        Visuals: A completely black screen.
+
+        Text: Overlay the word "DEFEAT!" in a dark red, pixelated font. Below it, add the text: "Your party has succumbed to the trail."
+
+
+-----------
+
+Generate Code

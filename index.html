@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Oregon Trail - Sepia Edition</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'VT323', monospace;
+            background-color: #fdf6e3; /* A light sepia background */
+            color: #583e2e; /* Dark brown text */
+        }
+        .game-container {
+            border: 8px solid #583e2e;
+            background-color: #eee8d5; /* A slightly darker sepia for the screen */
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+        }
+        .btn {
+            background-color: #6c7a89; /* Muted blue-gray */
+            border: 2px solid #583e2e;
+            color: #fdf6e3;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            padding: 10px 15px;
+            transition: all 0.2s;
+        }
+        .btn:hover {
+            background-color: #8b9aa9;
+            transform: translateY(-2px);
+        }
+        .text-input {
+            background-color: #fdf6e3;
+            border: 2px solid #583e2e;
+            color: #583e2e;
+            padding: 5px;
+        }
+        .progress-bar-container {
+            border: 2px solid #583e2e;
+            background-color: #fdf6e3;
+            padding: 2px;
+        }
+        .progress-bar {
+            background-color: #2a9d8f; /* Muted teal for progress */
+            height: 20px;
+        }
+        /* Custom styles for different screens */
+        #start-screen, #profession-screen, #name-screen, #store-screen, #trail-screen, #game-over-screen {
+            display: none; /* Hide all screens initially */
+        }
+        #start-screen {
+            display: flex; /* Show the start screen first */
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen">
+
+    <div class="game-container w-full max-w-4xl h-[500px] p-6 flex flex-col text-2xl">
+
+        <!-- Main Game Screen Content -->
+        <div id="game-content" class="flex-grow flex flex-col items-center justify-center text-center">
+
+            <!-- 1. Start Screen -->
+            <div id="start-screen" class="flex-col items-center justify-center w-full">
+                <h1 class="text-6xl mb-4">The Oregon Trail</h1>
+                <p class="mb-8">Sepia Edition</p>
+                <button id="start-game-btn" class="btn">Begin Journey</button>
+            </div>
+
+            <!-- 2. Profession Selection Screen -->
+            <div id="profession-screen" class="w-full">
+                <h2 class="text-4xl mb-6">Choose your profession:</h2>
+                <div class="space-y-4">
+                    <button class="btn w-full" onclick="selectProfession('banker')">1. Be a banker from Boston ($1600)</button>
+                    <button class="btn w-full" onclick="selectProfession('carpenter')">2. Be a carpenter from Ohio ($800)</button>
+                    <button class="btn w-full" onclick="selectProfession('farmer')">3. Be a farmer from Illinois ($400)</button>
+                </div>
+            </div>
+
+            <!-- 3. Naming Screen -->
+            <div id="name-screen" class="w-full text-left">
+                 <h2 class="text-4xl mb-6">Name your party members:</h2>
+                 <div class="space-y-2">
+                    <p>Wagon Leader: <input type="text" id="name-0" class="text-input w-1/2" maxlength="15"></p>
+                    <p>Member 2: <input type="text" id="name-1" class="text-input w-1/2" maxlength="15"></p>
+                    <p>Member 3: <input type="text" id="name-2" class="text-input w-1/2" maxlength="15"></p>
+                    <p>Member 4: <input type="text" id="name-3" class="text-input w-1/2" maxlength="15"></p>
+                    <p>Member 5: <input type="text" id="name-4" class="text-input w-1/2" maxlength="15"></p>
+                 </div>
+                 <button id="start-shopping-btn" class="btn mt-6">Go to the Store</button>
+            </div>
+
+            <!-- 4. Store Screen -->
+            <div id="store-screen" class="w-full text-left">
+                <h2 class="text-4xl mb-4">Matt's General Store</h2>
+                <p class="mb-4">Independence, Missouri</p>
+                <div class="grid grid-cols-2 gap-x-8">
+                    <div>
+                        <p>1. Oxen: $<span id="item-cost-oxen">40</span>/yoke</p>
+                        <p>2. Food: $<span id="item-cost-food">0.20</span>/pound</p>
+                        <p>3. Ammunition: $<span id="item-cost-ammo">2.00</span>/box</p>
+                        <p>4. Spare Parts: $<span id="item-cost-parts">10.00</span>/each</p>
+                    </div>
+                    <div>
+                        <p>Amount to spend: $<span id="money-left">0</span></p>
+                        <p>Total bill: $<span id="total-bill">0.00</span></p>
+                    </div>
+                </div>
+                <div class="mt-4 flex items-center">
+                    <label for="item-to-buy">Item:</label>
+                    <input type="number" id="item-to-buy" class="text-input w-16 mx-2" min="1" max="4">
+                    <label for="quantity-to-buy">Quantity:</label>
+                    <input type="number" id="quantity-to-buy" class="text-input w-24 mx-2" min="0">
+                    <button id="buy-item-btn" class="btn">Buy</button>
+                </div>
+                 <div id="store-message" class="mt-2 text-red-700 h-6"></div>
+                <button id="leave-store-btn" class="btn mt-4">Leave Store & Start Trail</button>
+            </div>
+
+            <!-- 5. Trail Screen -->
+            <div id="trail-screen" class="w-full h-full flex flex-col">
+                <div id="trail-visual" class="flex-grow bg-[#d2b48c] border-4 border-[#583e2e] mb-4 flex items-center justify-center">
+                    <p id="trail-event-text" class="text-3xl p-4"></p>
+                </div>
+                <div id="trail-message" class="h-12 text-center text-2xl mb-2">Press SPACEBAR to continue</div>
+                <button id="continue-btn" class="btn self-center">Continue on Trail</button>
+            </div>
+            
+            <!-- 6. Game Over Screen -->
+            <div id="game-over-screen" class="w-full text-center">
+                <h2 id="game-over-title" class="text-6xl mb-4">You have died.</h2>
+                <p id="game-over-message" class="text-3xl mb-8"></p>
+                <button onclick="window.location.reload()" class="btn">Play Again</button>
+            </div>
+
+        </div>
+
+        <!-- Footer Stats Bar -->
+        <div id="stats-bar" class="w-full pt-4 border-t-4 border-dashed border-[#583e2e] flex justify-between text-xl">
+            <span>Date: <span id="stat-date"></span></span>
+            <span>Miles: <span id="stat-miles">0</span></span>
+            <span>Health: <span id="stat-health">Good</span></span>
+            <span>Food: <span id="stat-food">0</span> lbs</span>
+            <span>Money: $<span id="stat-money">0</span></span>
+        </div>
+    </div>
+
+    <script>
+        // --- DOM Elements ---
+        const screens = {
+            start: document.getElementById('start-screen'),
+            profession: document.getElementById('profession-screen'),
+            name: document.getElementById('name-screen'),
+            store: document.getElementById('store-screen'),
+            trail: document.getElementById('trail-screen'),
+            gameOver: document.getElementById('game-over-screen'),
+        };
+        const statsBar = document.getElementById('stats-bar');
+        
+        // --- Game State ---
+        let gameState = {};
+
+        function resetGameState() {
+            gameState = {
+                profession: '',
+                money: 0,
+                party: ['', '', '', '', ''],
+                milesTraveled: 0,
+                totalMiles: 2000,
+                currentDate: new Date('1848-03-01'),
+                food: 0,
+                oxen: 0,
+                ammo: 0,
+                parts: 0,
+                health: 100,
+                pace: 'steady', // steady, strenuous, grueling
+                rations: 'filling', // filling, meager, bare-bones
+                turnInProgress: false,
+            };
+            statsBar.style.display = 'none';
+        }
+
+        // --- UI Navigation ---
+        function showScreen(screenName) {
+            Object.values(screens).forEach(screen => screen.style.display = 'none');
+            screens[screenName].style.display = 'flex';
+            if (screenName === 'trail' || screenName === 'gameOver') {
+                 screens[screenName].style.display = 'flex';
+                 screens[screenName].classList.add('flex-col', 'items-center', 'justify-center');
+            } else {
+                 screens[screenName].style.display = 'block';
+            }
+        }
+
+        // --- Game Flow ---
+
+        // 1. Start Game
+        document.getElementById('start-game-btn').addEventListener('click', () => {
+            showScreen('profession');
+        });
+
+        // 2. Select Profession
+        function selectProfession(profession) {
+            gameState.profession = profession;
+            if (profession === 'banker') gameState.money = 1600;
+            if (profession === 'carpenter') gameState.money = 800;
+            if (profession === 'farmer') gameState.money = 400;
+            showScreen('name');
+        }
+
+        // 3. Naming
+        document.getElementById('start-shopping-btn').addEventListener('click', () => {
+            for (let i = 0; i < 5; i++) {
+                const nameInput = document.getElementById(`name-${i}`);
+                gameState.party[i] = nameInput.value || `Member #${i+1}`;
+            }
+            setupStore();
+            showScreen('store');
+        });
+
+        // 4. Store Logic
+        const storeItems = {
+            1: { name: 'oxen', cost: 40, stock: 20 },
+            2: { name: 'food', cost: 0.20, stock: 10000 },
+            3: { name: 'ammo', cost: 2.00, stock: 100 },
+            4: { name: 'parts', cost: 10.00, stock: 10 },
+        };
+        let bill = 0;
+
+        function setupStore() {
+            document.getElementById('money-left').textContent = gameState.money.toFixed(2);
+            document.getElementById('total-bill').textContent = bill.toFixed(2);
+            updateStats();
+        }
+        
+        function updateStoreUI() {
+            document.getElementById('money-left').textContent = (gameState.money - bill).toFixed(2);
+            document.getElementById('total-bill').textContent = bill.toFixed(2);
+        }
+
+        document.getElementById('buy-item-btn').addEventListener('click', () => {
+            const itemNum = parseInt(document.getElementById('item-to-buy').value);
+            const quantity = parseInt(document.getElementById('quantity-to-buy').value);
+            const storeMessage = document.getElementById('store-message');
+            
+            storeMessage.textContent = '';
+
+            if (!itemNum || !quantity || !storeItems[itemNum] || quantity < 0) {
+                storeMessage.textContent = "Invalid item or quantity.";
+                return;
+            }
+
+            const item = storeItems[itemNum];
+            const cost = item.cost * quantity;
+
+            if (cost > (gameState.money - bill)) {
+                storeMessage.textContent = "You don't have enough money.";
+                return;
+            }
+
+            bill += cost;
+            gameState[item.name] += quantity;
+            updateStoreUI();
+            updateStats(); // Update stats bar as items are bought
+        });
+        
+        document.getElementById('leave-store-btn').addEventListener('click', () => {
+            const storeMessage = document.getElementById('store-message');
+            if (gameState.oxen < 2) {
+                storeMessage.textContent = "You need at least one yoke (2 oxen) to start.";
+                return;
+            }
+            if (gameState.food <= 0) {
+                storeMessage.textContent = "You should probably buy some food.";
+                return;
+            }
+
+            gameState.money -= bill;
+            updateStats();
+            statsBar.style.display = 'flex';
+            showScreen('trail');
+            startGameLoop();
+        });
+
+
+        // 5. Trail Logic
+        function startGameLoop() {
+            gameState.turnInProgress = false;
+            updateTrailUI("Your journey begins! Good luck.");
+            document.body.onkeyup = function(e) {
+                if (e.keyCode == 32 && !gameState.turnInProgress) {
+                    takeTurn();
+                }
+            }
+            document.getElementById('continue-btn').addEventListener('click', () => {
+                 if (!gameState.turnInProgress) {
+                    takeTurn();
+                }
+            });
+        }
+
+        function takeTurn() {
+            if (gameState.health <= 0 || gameState.food <= 0 || gameState.milesTraveled >= gameState.totalMiles) {
+                 endGame();
+                 return;
+            }
+
+            gameState.turnInProgress = true;
+            document.getElementById('trail-message').textContent = 'Traveling...';
+            
+            // A. Update date
+            const daysToAdvance = Math.floor(Math.random() * 5) + 10;
+            gameState.currentDate.setDate(gameState.currentDate.getDate() + daysToAdvance);
+
+            // B. Travel miles
+            const milesThisTurn = gameState.oxen * 5 + Math.floor(Math.random() * 20);
+            gameState.milesTraveled += milesThisTurn;
+            if(gameState.milesTraveled > gameState.totalMiles) gameState.milesTraveled = gameState.totalMiles;
+
+            // C. Consume food
+            const foodConsumed = gameState.party.length * 3 + Math.floor(Math.random() * 5);
+            gameState.food -= foodConsumed;
+            if (gameState.food < 0) gameState.food = 0;
+
+            // D. Random event
+            let eventMessage = `You traveled ${milesThisTurn} miles.`;
+            const eventRoll = Math.random();
+            if (eventRoll > 0.85) {
+                const healthLost = Math.floor(Math.random() * 15) + 5;
+                gameState.health -= healthLost;
+                eventMessage += ` A member has dysentery. Health drops.`;
+            } else if (eventRoll > 0.7) {
+                const foodFound = Math.floor(Math.random() * 50) + 20;
+                gameState.food += foodFound;
+                eventMessage += ` You found ${foodFound} lbs of berries!`;
+            } else if (eventRoll < 0.1 && gameState.oxen > 0) {
+                 gameState.oxen--;
+                 eventMessage += ` An ox has died.`;
+            }
+
+            // E. Update UI after a delay
+            setTimeout(() => {
+                updateStats();
+                updateTrailUI(eventMessage);
+                gameState.turnInProgress = false;
+                document.getElementById('trail-message').textContent = 'Press SPACEBAR to continue';
+                if (gameState.health <= 0 || gameState.food <= 0 || gameState.milesTraveled >= gameState.totalMiles) {
+                    endGame();
+                }
+            }, 1500);
+        }
+        
+        function updateTrailUI(message) {
+            document.getElementById('trail-event-text').textContent = message;
+        }
+
+
+        // 6. Game Over
+        function endGame() {
+            document.body.onkeyup = null; // Disable spacebar
+            document.getElementById('continue-btn').style.display = 'none';
+            document.getElementById('trail-message').textContent = '';
+
+            let title = '';
+            let message = '';
+
+            if (gameState.milesTraveled >= gameState.totalMiles) {
+                title = "Congratulations!";
+                message = `You have successfully reached Oregon! You arrived with $${gameState.money.toFixed(2)}.`;
+            } else if (gameState.health <= 0) {
+                title = "You have died of illness.";
+                message = "Your journey has ended in tragedy.";
+            } else if (gameState.food <= 0) {
+                title = "You have died of starvation.";
+                message = "There was nothing left to eat.";
+            } else {
+                 title = "Your journey has ended.";
+                 message = "Better luck next time.";
+            }
+            
+            document.getElementById('game-over-title').textContent = title;
+            document.getElementById('game-over-message').textContent = message;
+            showScreen('gameOver');
+        }
+
+
+        // --- Utility Functions ---
+        function updateStats() {
+            document.getElementById('stat-date').textContent = gameState.currentDate.toLocaleDateString("en-US", { year: 'numeric', month: 'long', day: 'numeric' });
+            document.getElementById('stat-miles').textContent = Math.floor(gameState.milesTraveled);
+            document.getElementById('stat-food').textContent = Math.floor(gameState.food);
+            document.getElementById('stat-money').textContent = gameState.money.toFixed(2);
+            
+            const health = gameState.health;
+            let healthStatus = 'Good';
+            if (health < 75) healthStatus = 'Fair';
+            if (health < 50) healthStatus = 'Poor';
+            if (health < 25) healthStatus = 'Very Poor';
+            document.getElementById('stat-health').textContent = healthStatus;
+        }
+
+        // --- Initial Setup ---
+        resetGameState();
+
+    </script>
+</body>
+</html>

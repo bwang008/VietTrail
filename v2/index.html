@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Viet Trail</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Courier New', monospace;
+            background: #2c1810;
+            color: #d4c4a8;
+            overflow: hidden;
+            user-select: none;
+        }
+
+        #gameContainer {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        #gameCanvas {
+            flex: 1;
+            background: #3d2817;
+            filter: sepia(1);
+            cursor: crosshair;
+        }
+
+        #uiPanel {
+            background: #2c1810;
+            border-top: 2px solid #8b4513;
+            padding: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            min-height: 80px;
+        }
+
+        .progress-section {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .progress-bar {
+            width: 200px;
+            height: 20px;
+            background: #4a3728;
+            border: 2px solid #8b4513;
+            position: relative;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #8b4513, #cd853f);
+            transition: width 0.3s ease;
+        }
+
+        .hunger-bar {
+            width: 200px;
+            height: 20px;
+            background: #4a3728;
+            border: 2px solid #8b4513;
+            position: relative;
+        }
+
+        .hunger-fill {
+            height: 100%;
+            transition: width 0.3s ease;
+        }
+
+        .hunger-fill.high {
+            background: linear-gradient(90deg, #556b2f, #6b8e23);
+        }
+
+        .hunger-fill.medium {
+            background: linear-gradient(90deg, #b8860b, #daa520);
+        }
+
+        .hunger-fill.low {
+            background: linear-gradient(90deg, #8b0000, #cd5c5c);
+        }
+
+        .progress-label, .hunger-label {
+            font-size: 12px;
+            color: #d4c4a8;
+            text-align: center;
+        }
+
+        #huntButton {
+            background: #8b4513;
+            color: #d4c4a8;
+            border: 2px solid #cd853f;
+            padding: 10px 20px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        #huntButton:hover {
+            background: #cd8533;
+            border-color: #daa520;
+        }
+
+        #huntButton:active {
+            transform: scale(0.95);
+        }
+
+        .scene {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: none;
+        }
+
+        .scene.active {
+            display: block;
+        }
+
+        .main-menu {
+            background: linear-gradient(135deg, #3d2817, #2c1810);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 30px;
+        }
+
+        .game-title {
+            font-size: 48px;
+            color: #d4c4a8;
+            text-shadow: 3px 3px 0px #2c1810;
+            text-align: center;
+        }
+
+        .start-button {
+            background: #8b4513;
+            color: #d4c4a8;
+            border: 3px solid #cd853f;
+            padding: 15px 30px;
+            font-family: 'Courier New', monospace;
+            font-size: 18px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .start-button:hover {
+            background: #cd8533;
+            border-color: #daa520;
+            transform: scale(1.05);
+        }
+
+        .end-scene {
+            background: #000;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .end-text {
+            font-size: 36px;
+            text-align: center;
+        }
+
+        .victory-text {
+            color: #32cd32;
+        }
+
+        .defeat-text {
+            color: #8b0000;
+        }
+
+        .subtitle {
+            font-size: 18px;
+            color: #d4c4a8;
+            text-align: center;
+            max-width: 400px;
+        }
+
+        .crosshair {
+            cursor: crosshair;
+        }
+
+        .animal {
+            position: absolute;
+            width: 32px;
+            height: 32px;
+            background: #8b4513;
+            border: 2px solid #cd853f;
+        }
+
+        .buffalo {
+            background: #654321;
+            border-color: #8b4513;
+        }
+
+        .monkey {
+            background: #8b4513;
+            border-color: #cd853f;
+        }
+
+        .caravan {
+            position: absolute;
+            width: 64px;
+            height: 32px;
+            background: #8b4513;
+            border: 2px solid #cd853f;
+            bottom: 100px;
+        }
+
+        .jungle-bg {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: repeating-linear-gradient(
+                90deg,
+                #3d2817 0px,
+                #3d2817 50px,
+                #4a3728 50px,
+                #4a3728 100px
+            );
+        }
+    </style>
+</head>
+<body>
+    <div id="gameContainer">
+        <canvas id="gameCanvas" width="800" height="600"></canvas>
+        
+        <div id="uiPanel">
+            <div class="progress-section">
+                <div class="progress-label">Journey to Saigon</div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+            </div>
+            
+            <div class="progress-section">
+                <div class="hunger-label">Stamina/Food</div>
+                <div class="hunger-bar">
+                    <div class="hunger-fill" id="hungerFill"></div>
+                </div>
+            </div>
+            
+            <button id="huntButton">Stop to Hunt</button>
+        </div>
+    </div>
+
+    <!-- Scene Containers -->
+    <div class="scene main-menu" id="mainMenuScene">
+        <div class="game-title">The Viet Trail</div>
+        <button class="start-button" id="startButton">Start Game</button>
+    </div>
+
+    <div class="scene end-scene" id="endScene">
+        <div class="end-text" id="endText"></div>
+        <div class="subtitle" id="endSubtitle"></div>
+    </div>
+
+    <script>
+        // Audio Manager Class
+        class AudioManager {
+            constructor() {
+                this.sounds = {};
+                this.audioContext = null;
+                this.initAudio();
+            }
+
+            initAudio() {
+                try {
+                    this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                } catch (e) {
+                    console.log('Web Audio API not supported');
+                }
+            }
+
+            playSound(soundName) {
+                if (!this.audioContext) return;
+
+                const oscillator = this.audioContext.createOscillator();
+                const gainNode = this.audioContext.createGain();
+
+                oscillator.connect(gainNode);
+                gainNode.connect(this.audioContext.destination);
+
+                switch (soundName) {
+                    case 'click':
+                        oscillator.frequency.setValueAtTime(800, this.audioContext.currentTime);
+                        oscillator.type = 'square';
+                        gainNode.gain.setValueAtTime(0.1, this.audioContext.currentTime);
+                        oscillator.start();
+                        oscillator.stop(this.audioContext.currentTime + 0.1);
+                        break;
+                    case 'shoot':
+                        oscillator.frequency.setValueAtTime(200, this.audioContext.currentTime);
+                        oscillator.type = 'sawtooth';
+                        gainNode.gain.setValueAtTime(0.2, this.audioContext.currentTime);
+                        oscillator.start();
+                        oscillator.stop(this.audioContext.currentTime + 0.2);
+                        break;
+                    case 'victory':
+                        this.playMelody([523, 659, 784, 1047], 0.15);
+                        break;
+                    case 'defeat':
+                        oscillator.frequency.setValueAtTime(100, this.audioContext.currentTime);
+                        oscillator.type = 'sine';
+                        gainNode.gain.setValueAtTime(0.3, this.audioContext.currentTime);
+                        oscillator.start();
+                        oscillator.stop(this.audioContext.currentTime + 0.5);
+                        break;
+                }
+            }
+
+            playMelody(frequencies, duration) {
+                frequencies.forEach((freq, index) => {
+                    setTimeout(() => {
+                        const oscillator = this.audioContext.createOscillator();
+                        const gainNode = this.audioContext.createGain();
+                        
+                        oscillator.connect(gainNode);
+                        gainNode.connect(this.audioContext.destination);
+                        
+                        oscillator.frequency.setValueAtTime(freq, this.audioContext.currentTime);
+                        oscillator.type = 'square';
+                        gainNode.gain.setValueAtTime(0.1, this.audioContext.currentTime);
+                        
+                        oscillator.start();
+                        oscillator.stop(this.audioContext.currentTime + duration);
+                    }, index * 200);
+                });
+            }
+        }
+
+        // Game Manager Class
+        class GameManager {
+            constructor() {
+                this.canvas = document.getElementById('gameCanvas');
+                this.ctx = this.canvas.getContext('2d');
+                this.audioManager = new AudioManager();
+                this.currentScene = null;
+                this.gameState = {
+                    progress: 0,
+                    hunger: 100,
+                    partyMembers: ['An', 'Binh', 'Chi', 'Dung'],
+                    supplies: 100
+                };
+                
+                this.scenes = {
+                    mainMenu: new MainMenuScene(this),
+                    travel: new TravelScene(this),
+                    hunting: new HuntingScene(this),
+                    end: new EndScene(this)
+                };
+
+                this.init();
+            }
+
+            init() {
+                this.switchScene('mainMenu');
+                this.gameLoop();
+            }
+
+            switchScene(sceneName) {
+                if (this.currentScene) {
+                    this.currentScene.cleanup();
+                }
+                
+                this.currentScene = this.scenes[sceneName];
+                this.currentScene.init();
+                
+                // Update UI visibility
+                document.getElementById('uiPanel').style.display = 
+                    sceneName === 'travel' ? 'flex' : 'none';
+            }
+
+            gameLoop() {
+                if (this.currentScene && this.currentScene.update) {
+                    this.currentScene.update();
+                }
+                
+                if (this.currentScene && this.currentScene.render) {
+                    this.currentScene.render();
+                }
+                
+                requestAnimationFrame(() => this.gameLoop());
+            }
+
+            updateGameState() {
+                // Update progress bar
+                const progressFill = document.getElementById('progressFill');
+                if (progressFill) {
+                    progressFill.style.width = this.gameState.progress + '%';
+                }
+
+                // Update hunger bar
+                const hungerFill = document.getElementById('hungerFill');
+                if (hungerFill) {
+                    hungerFill.style.width = this.gameState.hunger + '%';
+                    hungerFill.className = 'hunger-fill';
+                    
+                    if (this.gameState.hunger > 60) {
+                        hungerFill.classList.add('high');
+                    } else if (this.gameState.hunger > 30) {
+                        hungerFill.classList.add('medium');
+                    } else {
+                        hungerFill.classList.add('low');
+                    }
+                }
+            }
+        }
+
+        // Main Menu Scene
+        class MainMenuScene {
+            constructor(gameManager) {
+                this.gameManager = gameManager;
+            }
+
+            init() {
+                document.getElementById('mainMenuScene').classList.add('active');
+                document.getElementById('startButton').addEventListener('click', () => {
+                    this.gameManager.audioManager.playSound('click');
+                    this.gameManager.switchScene('travel');
+                });
+            }
+
+            cleanup() {
+                document.getElementById('mainMenuScene').classList.remove('active');
+                document.getElementById('startButton').removeEventListener('click', () => {});
+            }
+
+            update() {}
+            render() {}
+        }
+
+        // Travel Scene
+        class TravelScene {
+            constructor(gameManager) {
+                this.gameManager = gameManager;
+                this.startTime = Date.now();
+                this.lastUpdate = Date.now();
+                this.caravanX = 50;
+                this.jungleOffset = 0;
+            }
+
+            init() {
+                document.getElementById('huntButton').addEventListener('click', () => {
+                    this.gameManager.audioManager.playSound('click');
+                    this.gameManager.switchScene('hunting');
+                });
+                
+                this.startTime = Date.now();
+                this.lastUpdate = Date.now();
+                this.caravanX = 50;
+                this.jungleOffset = 0;
+            }
+
+            cleanup() {
+                document.getElementById('huntButton').removeEventListener('click', () => {});
+            }
+
+            update() {
+                const now = Date.now();
+                const deltaTime = now - this.lastUpdate;
+                this.lastUpdate = now;
+
+                // Update progress (5 minutes to reach 100%)
+                const elapsed = now - this.startTime;
+                this.gameManager.gameState.progress = Math.min(100, (elapsed / (5 * 60 * 1000)) * 100);
+
+                // Update hunger (1 minute to reach 0%)
+                this.gameManager.gameState.hunger = Math.max(0, 100 - (elapsed / (60 * 1000)) * 100);
+
+                // Animate caravan
+                this.caravanX = 50 + (this.gameManager.gameState.progress / 100) * (this.gameManager.canvas.width - 114);
+                this.jungleOffset = (this.jungleOffset + 1) % 100;
+
+                // Check win/lose conditions
+                if (this.gameManager.gameState.progress >= 100) {
+                    this.gameManager.switchScene('end');
+                } else if (this.gameManager.gameState.hunger <= 0) {
+                    this.gameManager.switchScene('end');
+                }
+
+                this.gameManager.updateGameState();
+            }
+
+            render() {
+                const ctx = this.gameManager.ctx;
+                const canvas = this.gameManager.canvas;
+
+                // Clear canvas
+                ctx.fillStyle = '#3d2817';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                // Draw jungle background
+                ctx.fillStyle = '#4a3728';
+                for (let x = 0; x < canvas.width; x += 100) {
+                    ctx.fillRect(x - this.jungleOffset, 0, 50, canvas.height);
+                }
+
+                // Draw caravan
+                ctx.fillStyle = '#8b4513';
+                ctx.fillRect(this.caravanX, canvas.height - 132, 64, 32);
+                ctx.strokeStyle = '#cd853f';
+                ctx.lineWidth = 2;
+                ctx.strokeRect(this.caravanX, canvas.height - 132, 64, 32);
+
+                // Draw party members
+                ctx.fillStyle = '#cd853f';
+                for (let i = 0; i < 4; i++) {
+                    ctx.fillRect(this.caravanX + 8 + i * 12, canvas.height - 140, 8, 8);
+                }
+            }
+        }
+
+        // Hunting Scene
+        class HuntingScene {
+            constructor(gameManager) {
+                this.gameManager = gameManager;
+                this.animals = [];
+                this.startTime = Date.now();
+                this.gameDuration = 15000; // 15 seconds
+                this.score = 0;
+            }
+
+            init() {
+                this.startTime = Date.now();
+                this.score = 0;
+                this.animals = [];
+                this.spawnAnimals();
+
+                this.gameManager.canvas.addEventListener('click', this.handleClick.bind(this));
+            }
+
+            cleanup() {
+                this.gameManager.canvas.removeEventListener('click', this.handleClick.bind(this));
+            }
+
+            spawnAnimals() {
+                const spawnInterval = setInterval(() => {
+                    if (Date.now() - this.startTime >= this.gameDuration) {
+                        clearInterval(spawnInterval);
+                        return;
+                    }
+
+                    const animal = {
+                        x: Math.random() * (this.gameManager.canvas.width - 32),
+                        y: Math.random() * (this.gameManager.canvas.height - 100),
+                        type: Math.random() > 0.5 ? 'buffalo' : 'monkey',
+                        vx: (Math.random() - 0.5) * 4,
+                        vy: (Math.random() - 0.5) * 4
+                    };
+                    this.animals.push(animal);
+                }, 1000);
+            }
+
+            handleClick(event) {
+                this.gameManager.audioManager.playSound('shoot');
+                
+                const rect = this.gameManager.canvas.getBoundingClientRect();
+                const x = event.clientX - rect.left;
+                const y = event.clientY - rect.top;
+
+                // Check if click hit any animal
+                for (let i = this.animals.length - 1; i >= 0; i--) {
+                    const animal = this.animals[i];
+                    if (x >= animal.x && x <= animal.x + 32 &&
+                        y >= animal.y && y <= animal.y + 32) {
+                        this.animals.splice(i, 1);
+                        this.score += 20;
+                        this.gameManager.gameState.supplies += 20;
+                        break;
+                    }
+                }
+            }
+
+            update() {
+                const elapsed = Date.now() - this.startTime;
+
+                // Update animal positions
+                this.animals.forEach(animal => {
+                    animal.x += animal.vx;
+                    animal.y += animal.vy;
+
+                    // Bounce off walls
+                    if (animal.x <= 0 || animal.x >= this.gameManager.canvas.width - 32) {
+                        animal.vx *= -1;
+                    }
+                    if (animal.y <= 0 || animal.y >= this.gameManager.canvas.height - 100) {
+                        animal.vy *= -1;
+                    }
+                });
+
+                // Check if game is over
+                if (elapsed >= this.gameDuration) {
+                    // Refill hunger based on supplies gathered
+                    this.gameManager.gameState.hunger = Math.min(100, this.gameManager.gameState.hunger + this.score);
+                    this.gameManager.switchScene('travel');
+                }
+            }
+
+            render() {
+                const ctx = this.gameManager.ctx;
+                const canvas = this.gameManager.canvas;
+
+                // Clear canvas
+                ctx.fillStyle = '#3d2817';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                // Draw jungle clearing background
+                ctx.fillStyle = '#4a3728';
+                ctx.fillRect(100, 100, canvas.width - 200, canvas.height - 200);
+
+                // Draw animals
+                this.animals.forEach(animal => {
+                    ctx.fillStyle = animal.type === 'buffalo' ? '#654321' : '#8b4513';
+                    ctx.fillRect(animal.x, animal.y, 32, 32);
+                    ctx.strokeStyle = animal.type === 'buffalo' ? '#8b4513' : '#cd853f';
+                    ctx.lineWidth = 2;
+                    ctx.strokeRect(animal.x, animal.y, 32, 32);
+                });
+
+                // Draw timer
+                const timeLeft = Math.max(0, (this.gameDuration - (Date.now() - this.startTime)) / 1000);
+                ctx.fillStyle = '#d4c4a8';
+                ctx.font = '24px Courier New';
+                ctx.textAlign = 'center';
+                ctx.fillText(`Time: ${timeLeft.toFixed(1)}s`, canvas.width / 2, 50);
+                ctx.fillText(`Score: ${this.score}`, canvas.width / 2, 80);
+            }
+        }
+
+        // End Scene
+        class EndScene {
+            constructor(gameManager) {
+                this.gameManager = gameManager;
+                this.soundPlayed = false;
+            }
+
+            init() {
+                const isVictory = this.gameManager.gameState.progress >= 100;
+                
+                if (!this.soundPlayed) {
+                    if (isVictory) {
+                        this.gameManager.audioManager.playSound('victory');
+                    } else {
+                        this.gameManager.audioManager.playSound('defeat');
+                    }
+                    this.soundPlayed = true;
+                }
+
+                const endText = document.getElementById('endText');
+                const endSubtitle = document.getElementById('endSubtitle');
+
+                if (isVictory) {
+                    endText.textContent = 'VICTORY!';
+                    endText.className = 'end-text victory-text';
+                    endSubtitle.textContent = 'Your supplies have reached Saigon.';
+                } else {
+                    endText.textContent = 'DEFEAT!';
+                    endText.className = 'end-text defeat-text';
+                    endSubtitle.textContent = 'Your party has succumbed to the trail.';
+                }
+
+                document.getElementById('endScene').classList.add('active');
+
+                // Auto-restart after 5 seconds
+                setTimeout(() => {
+                    this.gameManager.gameState = {
+                        progress: 0,
+                        hunger: 100,
+                        partyMembers: ['An', 'Binh', 'Chi', 'Dung'],
+                        supplies: 100
+                    };
+                    this.gameManager.switchScene('mainMenu');
+                    this.soundPlayed = false;
+                }, 5000);
+            }
+
+            cleanup() {
+                document.getElementById('endScene').classList.remove('active');
+            }
+
+            update() {}
+            render() {}
+        }
+
+        // Initialize the game when the page loads
+        window.addEventListener('load', () => {
+            new GameManager();
+        });
+    </script>
+</body>
+</html>

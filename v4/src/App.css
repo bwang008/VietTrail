@@ -1,0 +1,23 @@
+.container {
+  padding: 2rem;
+  text-align: center;
+}
+
+.sepia {
+  filter: sepia(1);
+}
+
+body {
+  background-color: #f0e6d2;
+  color: #4a4a4a;
+}
+
+h1 {
+  color: #704214;
+}
+
+button {
+  background-color: #704214;
+  color: #f0e6d2;
+  border: 2px solid #4a4a4a;
+}
