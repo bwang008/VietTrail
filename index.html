@@ -411,11 +411,13 @@
         // --- Hunting Mini-Game ---
         let animals = [];
         let foodGainedThisHunt = 0;
+        let waterBuffaloImg = new Image();
+        waterBuffaloImg.src = 'imgs/water_buffalo_1.png';
 
         const animalTypes = {
             squirrel: { w: 20, h: 10, speed: 3, food: 5, color: '#8B4513' },
             monkey: { w: 30, h: 25, speed: 2, food: 20, color: '#A0522D' },
-            buffalo: { w: 80, h: 50, speed: 1, food: 100, color: '#696969' },
+            buffalo: { w: 80, h: 50, speed: 1, food: 100, color: '#696969', type: 'buffalo' },
         };
 
         function startHuntGame() {
@@ -480,8 +482,14 @@
                 if (a.x > huntCanvas.width || a.x < -a.w) {
                     animals.splice(i, 1);
                 } else {
-                    huntCtx.fillStyle = a.color;
-                    huntCtx.fillRect(a.x, a.y, a.w, a.h);
+                    if (a.type === 'buffalo') {
+                        // Draw water buffalo image
+                        huntCtx.drawImage(waterBuffaloImg, a.x, a.y, a.w, a.h);
+                    } else {
+                        // Draw other animals as colored rectangles
+                        huntCtx.fillStyle = a.color;
+                        huntCtx.fillRect(a.x, a.y, a.w, a.h);
+                    }
                 }
             }
             huntAnimationId = requestAnimationFrame(huntAnimationLoop);
